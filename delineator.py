@@ -108,27 +108,17 @@ def delineator(input_tiff, output_tiff, percentile):
     
     start = time.time()    
     
-    flattened_valid_clusters = set()
+    tmp_arr = np.ones(final_arr.shape, dtype=int)
     for c in valid_clusters:
-        flattened_valid_clusters = flattened_valid_clusters.union(c)
-        
+        for y, x in c:
+            tmp_arr[y,x] = 0
     
-    mask = np.zeros(final_arr.shape, dtype=bool)
-    for y, x in flattened_valid_clusters:
-        mask[y, x] = True
-    final_arr[~mask] = 1
-    
-    """
-    for x in range(0 , xsize, 1):
-        for y in range(0, ysize, 1):
-            if (y, x) not in flattened_valid_clusters:
-                final_arr[y,x] = 1
-    """
-    
+    final_arr = tmp_arr
+            
+       
     end = time.time()
     duration = end-start
     print("I finish the cleaning of not highly populated clusters in "+str(duration)+" seconds")
-    
     
         #5.CREATE THE NEW TIFF FILE AND EXPORT IT
     
@@ -140,15 +130,6 @@ def delineator(input_tiff, output_tiff, percentile):
     new_tiff.FlushCache() #Saves to disk 
     new_tiff = None #closes the file
 
-continents = ["europe", "africa", "north_america", "asia", "oceanie", "south_america"]
 
-for c in continents:
-    start = time.time()
-    delineator("D:/population/countries_2000/population_"+c+"_2000.tif", "D:/test/p95_population_"+c+"_2000.tif", 95)
-    end = time.time()
-    duration = end-start
-    print("I made it for "+c+" in "+str(duration)+" seconds")
-    
-    
     
     

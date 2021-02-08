@@ -15,8 +15,8 @@ from delineator import delineator
 
 index_list = ["jaccard", "MSE", "SSIM"]
 types_list = ["night_light", "built", "population"]
-ctr_code = "europe"
-ctr_name = "Europe"
+ctr_code = "africa"
+ctr_name = "Africa"
 index_dict = {"jaccard" : "Jaccard Index", "MSE" : "Mean Squared Errors", "SSIM" : "Structural Similarity"}
 
 
