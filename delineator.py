@@ -25,6 +25,7 @@ def delineator(input_tiff, output_tiff, percentile):
     #3. LOAD THE TIFF FILE IN AN ARRAY
 
     arr_img = tiff_file.ReadAsArray()
+    arr_img = arr_img.astype(np.int)
     tiff_file = None #close it
     band = None #close it
 
@@ -37,10 +38,11 @@ def delineator(input_tiff, output_tiff, percentile):
     #DELINEATION
     start = time.time()
     
-    perc = np.percentile(np.select(arr_img>0, arr_img) , percentile, interpolation = 'nearest')
+    perc = np.percentile(np.select(arr_img>=0, arr_img) , percentile, interpolation = 'nearest')
     final_arr = np.where(arr_img <= perc, -2, arr_img)
-    final_arr = np.where(final_arr >= 0, 0, final_arr) 
-    final_arr = np.where(final_arr == -2, 1, final_arr)
+    final_arr = arr_img.astype(np.int)
+    final_arr = np.where(final_arr > 0, 0, final_arr) 
+    final_arr = np.where(final_arr != 0, 1, final_arr)
 
     end = time.time()
     duration = end-start
@@ -64,45 +66,47 @@ def delineator(input_tiff, output_tiff, percentile):
         if c == 0:
             final_arr[y,x] = 1                          
 
-    
-    #CLIP THE SLAYER USING THE MASK ARRAY
-    
-    mask_arr = - np.ones((ysize, xsize))
-    for y, x in zip(*np.where(final_arr == 0)):
-        mask_arr[y,x] = arr_img[y,x]
-
-    
     end = time.time()
     duration = end-start
     print("I finish the cleaning of the none contiguous pixels in "+str(duration)+" seconds")
 
     
-        #REDELINEATION 
+        #SECOND DELINEATION 
     start = time.time()
     
-    perc = np.percentile(np.select(mask_arr>0, mask_arr) , percentile, interpolation = 'nearest')
+    mask_arr = arr_img
+    mask_arr = mask_arr.astype(np.int)
+    mask_arr = np.where(final_arr == 1, -1, mask_arr)
+    
+    
+    perc = np.percentile(np.select(mask_arr>=0, mask_arr) , percentile, interpolation = 'nearest')
     mask_arr = np.where(mask_arr <= perc, -1, mask_arr)
-    mask_arr = np.where(mask_arr >= 0, 0, mask_arr) 
+    mask_arr = np.where(mask_arr > 0, 0, mask_arr) 
     mask_arr = np.where(mask_arr != 0, 1, mask_arr)
+    
     
     end = time.time()
     duration = end-start
     print("I finish the 2nd delineation in "+str(duration)+" seconds")
     
         #IDENTIFICATION OF THE "HIGHLY" POPULATED CLUSTERS
+
     
     start = time.time()
     
-    cluster_list = cm.get_all_urban_cluster(final_arr)
+    cluster_list = cm.get_all_urban_cluster(mask_arr)
+    
     valid_clusters = []
-    mask_arr_indexes = set((y, x) for y,x in zip(*np.where(mask_arr == 0)))
+    indexes = set((y, x) for y,x in zip(*np.where(final_arr == 0)))
     for c in cluster_list:
-        if len(mask_arr_indexes.intersection(c)) > 0:
+        if len(indexes.intersection(c)) > 0:
             valid_clusters.append(c)
+    
     
     end = time.time()
     duration = end-start
     print("I finish the identification of clusters in "+str(duration)+" seconds")
+    
     
         #DELETE THE CLUSTER THAT ARE NOT "HIGHLY" POPULATED
     
@@ -131,5 +135,4 @@ def delineator(input_tiff, output_tiff, percentile):
     new_tiff = None #closes the file
 
 
-    
-    
+
