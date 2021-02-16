@@ -40,7 +40,6 @@ def delineator(input_tiff, output_tiff, percentile):
     
     perc = np.percentile(np.select(arr_img>=0, arr_img) , percentile, interpolation = 'nearest')
     final_arr = np.where(arr_img <= perc, -2, arr_img)
-    final_arr = arr_img.astype(np.int)
     final_arr = np.where(final_arr > 0, 0, final_arr) 
     final_arr = np.where(final_arr != 0, 1, final_arr)
 
@@ -75,7 +74,6 @@ def delineator(input_tiff, output_tiff, percentile):
     start = time.time()
     
     mask_arr = arr_img
-    mask_arr = mask_arr.astype(np.int)
     mask_arr = np.where(final_arr == 1, -1, mask_arr)
     
     
@@ -94,10 +92,10 @@ def delineator(input_tiff, output_tiff, percentile):
     
     start = time.time()
     
-    cluster_list = cm.get_all_urban_cluster(mask_arr)
+    cluster_list = cm.get_all_urban_cluster(final_arr)
     
     valid_clusters = []
-    indexes = set((y, x) for y,x in zip(*np.where(final_arr == 0)))
+    indexes = set((y, x) for y,x in zip(*np.where(mask_arr == 0)))
     for c in cluster_list:
         if len(indexes.intersection(c)) > 0:
             valid_clusters.append(c)
@@ -112,11 +110,11 @@ def delineator(input_tiff, output_tiff, percentile):
     
     start = time.time()    
     
-    tmp_arr = np.ones(final_arr.shape, dtype=int)
+    tmp_arr = np.ones(final_arr.shape)
     for c in valid_clusters:
         for y, x in c:
             tmp_arr[y,x] = 0
-    
+        
     final_arr = tmp_arr
             
        
