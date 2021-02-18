@@ -122,7 +122,9 @@ def delineator(input_tiff, output_tiff, percentile):
     duration = end-start
     print("I finish the cleaning of not highly populated clusters in "+str(duration)+" seconds")
     
-        #5.CREATE THE NEW TIFF FILE AND EXPORT IT
+    
+
+    #5.CREATE THE NEW TIFF FILE AND EXPORT IT
     
     driver = gdal.GetDriverByName('GTiff')
     new_tiff = driver.Create(output_tiff ,xsize,ysize,1,gdal.GDT_Int16)
