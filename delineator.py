@@ -134,5 +134,4 @@ def delineator(input_tiff, output_tiff, percentile):
     new_tiff.FlushCache() #Saves to disk 
     new_tiff = None #closes the file
 
-
-
+delineator("D:/test/lul.tif", "D:/test/lul_deli.tif", 99)
