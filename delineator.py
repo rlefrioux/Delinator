@@ -8,6 +8,7 @@ from zipfile import ZipFile as zf
 import time
 sys.path.insert(0, "D:/python_script/")
 import cluster_maker as cm
+import smooth_density as sd
 
     
 def delineator(input_tiff, output_tiff, percentile):
@@ -38,6 +39,7 @@ def delineator(input_tiff, output_tiff, percentile):
     #DELINEATION
     start = time.time()
     
+    arr_img = sd.smooth_matrix(arr_img)
     perc = np.percentile(np.select(arr_img>=0, arr_img) , percentile, interpolation = 'nearest')
     final_arr = np.where(arr_img <= perc, -2, arr_img)
     final_arr = np.where(final_arr > 0, 0, final_arr) 
@@ -134,4 +136,11 @@ def delineator(input_tiff, output_tiff, percentile):
     new_tiff.FlushCache() #Saves to disk 
     new_tiff = None #closes the file
 
-delineator("D:/test/lul.tif", "D:/test/lul_deli.tif", 99)
+for i in range(95, 100, 1):
+    delineator("D:/night_light/countries_2000/night_light_europe_2000_modified.tif", "D:/test/night_light_optibw_p"+str(i)+".tif", i)
+    
+        
+    
+    
+    
+    

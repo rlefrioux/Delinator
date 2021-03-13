@@ -2,7 +2,7 @@ import numpy as np
 from osgeo import gdal
 from osgeo import osr
 
-"""
+
 #This function create a binary map where 0 value indicate that the pixel can't be urban
  
 def cant_be_urban(input_tiff, output_tiff, threshold):
@@ -108,7 +108,6 @@ tiff_slopes_binary = "D:/slopes/countries/binary_slopes_europe.tif"
 output_tiff = "D:/none_urban/countries/none_urban_europe.tif"    
     
 merge_cant_be_urban(tiff_elev_binary, tiff_water_binary, tiff_slopes_binary, output_tiff)    
-"""
 
 def mask_none_urban(none_urban_mask, tiff_to_mask, output_tiff):
      #1. OPEN THE TIFF FILE
@@ -138,7 +137,7 @@ def mask_none_urban(none_urban_mask, tiff_to_mask, output_tiff):
     
     #exclude pixels that can't be urban using a mask
     
-    final_arr = np.where(arr_mask == 1, -999, arr_img)
+    final_arr = np.where(arr_mask == 1, 0, arr_img)
     
     #save the new array in a tiff file
     
@@ -157,14 +156,14 @@ tiff_to_modify = "D:/test/lol.tif"
 output_tiff = "D:/test/lol_modified.tif"
 mask_none_urban(none_urban_mask, tiff_to_modify, output_tiff)
 
-"""
+
 types_list = ["sedac_population", "built", "night_light"]
 
 for t in types_list:
     tiff_to_modify = "D:/"+t+"/countries_2000/"+t+"_europe_2000.tif"
     output_tiff = "D:/"+t+"/countries_2000/"+t+"_europe_2000_modified.tif"
     mask_none_urban(none_urban_mask, tiff_to_modify, output_tiff)
-"""
+
 
 
 
