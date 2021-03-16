@@ -151,13 +151,8 @@ def mask_none_urban(none_urban_mask, tiff_to_mask, output_tiff):
     
   
   
-none_urban_mask = "D:/none_urban/countries/none_urban_europe.tif"
-tiff_to_modify = "D:/test/lol.tif"
-output_tiff = "D:/test/lol_modified.tif"
-mask_none_urban(none_urban_mask, tiff_to_modify, output_tiff)
 
-
-types_list = ["sedac_population", "built", "night_light"]
+types_list = ["population",]
 
 for t in types_list:
     tiff_to_modify = "D:/"+t+"/countries_2000/"+t+"_europe_2000.tif"
