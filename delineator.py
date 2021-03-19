@@ -39,7 +39,8 @@ def delineator(input_tiff, output_tiff, percentile):
     #DELINEATION
     start = time.time()
     
-    arr_img = sd.smooth_matrix(input_mat=arr_img, bandwidth=51)
+    
+    arr_img = sd.smooth_matrix(input_mat=arr_img, bandwidth=sd.Find_opti_bandwidth(input_mat=arr_img, bw_lower=1.1, bw_upper=2, bw_jump=0.01))
     perc = np.percentile(np.select(arr_img>=0, arr_img) , percentile, interpolation = 'nearest')
     final_arr = np.where(arr_img <= perc, -2, arr_img)
     final_arr = np.where(final_arr > 0, 0, final_arr) 
@@ -136,8 +137,7 @@ def delineator(input_tiff, output_tiff, percentile):
     new_tiff.FlushCache() #Saves to disk 
     new_tiff = None #closes the file
 
-for i in range(95, 100, 1):
-    delineator("D:/population/countries_2000/population_europe_2000_modified.tif", "D:/test/population_bw101_p"+str(i)+".tif", i)
+delineator("D:/built/countries_2000/built_europe_2000_modified.tif", "D:/test/built_bw3_p99.tif", 99)
     
         
     

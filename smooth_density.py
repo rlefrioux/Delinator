@@ -8,26 +8,10 @@ import statsmodels.api as sm
 import math
 import pandas as pd
 import seaborn as sns 
+import random
+from statistics import mean
+import time
 
-"""
-def Gaussian_Kernel_Filter(input_mat):
-    ravel_mat = input_mat.ravel()
-    ravel_mat = ravel_mat[ravel_mat != -999]
-    opti_bandwidth = sm.nonparametric.KDEMultivariate(ravel_mat, var_type='u').bw
-    mat = np.where(input_mat==-999, 0, input_mat)
-    final_arr = scipy.ndimage.gaussian_filter(input_mat, opti_bandwidth[0])
-    final_arr = np.where(input_mat==-999, -999, final_arr)
-    return final_arr
-"""
-
-"""
-def Gaussian_Kernel(input_mat):
-    kernel_mat = input_mat.ravel()
-    kernel_mat = kernel_mat[kernel_mat != -999]
-    opti_bandwidth = sm.nonparametric.KDEMultivariate(kernel_mat, var_type='u')
-    kernel_vector = sm.nonparametric.KDEMultivariate.cdf(opti_bandwidth)
-    print(kernel_vector)
-"""
 
 
 def euclidean_dist(x_1 , y_1, x_2, y_2):
@@ -35,26 +19,34 @@ def euclidean_dist(x_1 , y_1, x_2, y_2):
     return value
 
 def bisquare_kernel_matrix(bandwidth):
-    mat_weight = np.zeros((bandwidth, bandwidth))
-    x_center = int(bandwidth/2)
-    y_center = int(bandwidth/2)
-    for x in range(0, bandwidth, 1):
-        for y in range(0, bandwidth, 1):
-            mat_weight[x,y] = (1-(euclidean_dist(x_center, y_center, x, y)/bandwidth)**2)**2
+    #Create a square matrix that have always an odd number of dimension
+    if (int(bandwidth)*2 + 1 % 2) == 0:
+        mat_size = int(bandwidth)*2 + 2
+        mat_weight = np.zeros((mat_size, mat_size))
+        x_center = int(mat_size/2)
+        y_center = int(mat_size/2)
+        for x in range(0, mat_size, 1):
+            for y in range(0, mat_size, 1):
+                if euclidean_dist(x_center, y_center, x, y)<=bandwidth: 
+                    mat_weight[x,y] = (1-(euclidean_dist(x_center, y_center, x, y)/bandwidth)**2)**2        
+                else:
+                    mat_weight[x,y] = 0 
+    else:
+        mat_size = int(bandwidth)*2 + 1 
+        mat_weight = np.zeros((mat_size, mat_size))
+        x_center = int(mat_size/2)
+        y_center = int(mat_size/2)
+        for x in range(0, mat_size, 1):
+            for y in range(0, mat_size, 1):
+                if euclidean_dist(x_center, y_center, x, y)<=bandwidth:
+                    mat_weight[x,y] = (1-(euclidean_dist(x_center, y_center, x, y)/bandwidth)**2)**2
+                else:
+                    mat_weight[x_center, y_center] = 0
     mat_weight[x_center, y_center] = 0
     return mat_weight
+    
 
-"""
-def gaussian_kernel_matrix(bandwidth, x_size, y_size):
-    mat_weight = np.zeros((x_size, y_size))
-    x_center = int(x_size/2)
-    y_center = int(y_size/2)
-    for x in range(0, x_size, 1):
-        for y in range(0, y_size, 1):
-            mat_weight[x,y] = math.exp((-1/2)*(euclidean_dist(x_center, y_center, x, y)/bandwidth)**2)
-    mat_weight[x_center, y_center] = 0
-    return mat_weight
-"""    
+  
 
 #Notice that the bandwidth should be an odd integer
 def smooth_matrix(input_mat, bandwidth):
@@ -64,10 +56,67 @@ def smooth_matrix(input_mat, bandwidth):
     final_arr = scipy.ndimage.convolve(arr, mat_weight)
     final_arr = final_arr / mat_weight.sum()
     final_arr = np.where(input_mat == -999, -999, final_arr)
+    final_arr = np.around(final_arr, 0)
     return final_arr
 
 
+def correlation_coefficient(mat_1, mat_2):
+    numerator = np.mean((mat_1 - mat_1.mean()) * (mat_2 - mat_2.mean()))
+    denominator = mat_1.std() * mat_2.std()
+    if denominator == 0:
+        return 0
+    else:
+        result = numerator / denominator
+        return result
 
+def pseudo_R_squared(input_mat, bandwidth, x_excluded, y_excluded): 
+    excluded_mat = np.copy(input_mat)
+    excluded_mat[x_excluded, y_excluded] = 0
+    excluded_smooth_mat = smooth_matrix(input_mat=excluded_mat, bandwidth=bandwidth)
+    corr = correlation_coefficient(mat_1=excluded_smooth_mat, mat_2=input_mat)
+    pseudo_R_squared = corr**2
+    return pseudo_R_squared
+
+
+
+def avg_R_squared(input_mat, bandwidth, x_size, y_size):
+    R_squared_list = []
+    weight_list = []
+    for x in range(0, x_size, 1):
+        for y in range(0, y_size, 1):
+            R_squared_list.append(pseudo_R_squared(input_mat=input_mat, bandwidth=bandwidth, x_excluded=x, y_excluded=y))
+            weight_list.append(input_mat[x,y])
+    weight_sum = sum(weight_list)
+    weight_list = weight_list/weight_sum
+    avg_R_squared = mean(R_squared_list)
+    return avg_R_squared
+
+
+def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
+    start = time.time()
+    x_size = len(input_mat)
+    y_size = len(input_mat[0])
+    bandwidth = []
+    R_squared_list = []
+    for bw in np.arange(bw_lower, bw_upper, bw_jump):
+        R_squared_list.append(avg_R_squared(input_mat=input_mat, bandwidth=bw, x_size=x_size, y_size=y_size))
+        bandwidth.append(bw)
+    max_R_squared = max(R_squared_list)
+    max_index = R_squared_list.index(max_R_squared)
+    opti_bw = bandwidth[max_index]
+    end = time.time()
+    duration = end-start
+    print("I find the optimal bandwidth in "+str(duration)+" seconds" )
+    return opti_bw    
+
+"""
+mat = np.ones((100,100))
+for x in range(0,100,1):
+    for y in range(0,100,1):
+        mat[x,y] = random.randint(0, 64)
+
+print(Find_opti_bandwidth(input_mat=mat, bw_lower=1.1, bw_upper=2, bw_jump=0.01))
+"""
 
 """
 #1. OPEN THE TIFF FILE
