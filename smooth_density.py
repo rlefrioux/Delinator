@@ -4,7 +4,8 @@ from osgeo import osr
 from matplotlib import pyplot as plt 
 import scipy
 from scipy import stats
-import statsmodels.api as sm 
+import statsmodels.api as sm
+import statistics 
 import math
 import pandas as pd
 import seaborn as sns 
@@ -46,7 +47,6 @@ def bisquare_kernel_matrix(bandwidth):
     return mat_weight
     
 
-  
 
 #Notice that the bandwidth should be an odd integer
 def smooth_matrix(input_mat, bandwidth):
@@ -84,8 +84,12 @@ def avg_R_squared(input_mat, bandwidth, x_size, y_size):
     weight_list = []
     for x in range(0, x_size, 1):
         for y in range(0, y_size, 1):
-            R_squared_list.append(pseudo_R_squared(input_mat=input_mat, bandwidth=bandwidth, x_excluded=x, y_excluded=y))
-            weight_list.append(input_mat[x,y])
+            if input_mat[x,y] != 0:
+                R_squared_list.append(pseudo_R_squared(input_mat=input_mat, bandwidth=bandwidth, x_excluded=x, y_excluded=y))
+                weight_list.append(input_mat[x,y])
+            else:
+                R_squared_list.append(1)
+                weight_list.append(input_mat[x,y])
     weight_sum = sum(weight_list)
     weight_list = weight_list/weight_sum
     avg_R_squared = mean(R_squared_list)
@@ -101,13 +105,49 @@ def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
     for bw in np.arange(bw_lower, bw_upper, bw_jump):
         R_squared_list.append(avg_R_squared(input_mat=input_mat, bandwidth=bw, x_size=x_size, y_size=y_size))
         bandwidth.append(bw)
-    max_R_squared = max(R_squared_list)
+        max_R_squared = max(R_squared_list)
     max_index = R_squared_list.index(max_R_squared)
     opti_bw = bandwidth[max_index]
     end = time.time()
     duration = end-start
     print("I find the optimal bandwidth in "+str(duration)+" seconds" )
     return opti_bw    
+
+
+
+def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper, bw_jump):
+    opti_bandwidths = []
+    iteration = 0
+    start = time.time()
+    tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000_modified.tif")
+    arr_img = tiff_file.ReadAsArray()
+    arr_img = arr_img.astype(np.int)
+    ravel_arr_img = np.ravel(arr_img)
+    ravel_arr_img = ravel_arr_img[ravel_arr_img != -999]
+    arr_img = None
+    img = None
+    
+    for i in range(0,nb_iterations+1,1):
+        if i <= nb_iterations:
+            mat = np.random.choice(ravel_arr_img, (x_size, y_size))
+            opti_bandwidths.append(Find_opti_bandwidth(input_mat = mat, bw_lower =bw_lower, bw_upper=bw_upper, bw_jump=bw_jump))
+            print("I finish iteration number "+str(i+1))
+        else:
+            end = time.time()            
+            duration = end - start
+            print("I made this one in "+str(duration)+" seconds")
+    
+    return opti_bandwidths
+
+
+list_opti_bandwidths = random_mat_opti_bandwidths(nb_iterations=500, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5, bw_jump = 0.1)    
+print(list_opti_bandwidths)
+print("Average :"+str(mean(list_opti_bandwidths)))
+print("Median :"+str(statistics.median(list_opti_bandwidths)))
+print("Minimum :"+str(min(list_opti_bandwidths)))
+print("Maximum :"+str(max(list_opti_bandwidths)))
+print("Standard Deviations :"+str(statistics.stdev(list_opti_bandwidths)))
+    
 
 """
 mat = np.ones((100,100))

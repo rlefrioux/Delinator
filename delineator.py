@@ -9,6 +9,7 @@ import time
 sys.path.insert(0, "D:/python_script/")
 import cluster_maker as cm
 import smooth_density as sd
+import gaussian_smoothing as gs
 
     
 def delineator(input_tiff, output_tiff, percentile):
@@ -40,7 +41,7 @@ def delineator(input_tiff, output_tiff, percentile):
     start = time.time()
     
     
-    arr_img = sd.smooth_matrix(input_mat=arr_img, bandwidth=sd.Find_opti_bandwidth(input_mat=arr_img, bw_lower=1.1, bw_upper=2, bw_jump=0.01))
+    arr_img = sd.smooth_matrix_thumb(input_mat=arr_img)
     perc = np.percentile(np.select(arr_img>=0, arr_img) , percentile, interpolation = 'nearest')
     final_arr = np.where(arr_img <= perc, -2, arr_img)
     final_arr = np.where(final_arr > 0, 0, final_arr) 
