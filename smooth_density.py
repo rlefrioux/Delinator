@@ -111,15 +111,16 @@ def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
     end = time.time()
     duration = end-start
     print("I find the optimal bandwidth in "+str(duration)+" seconds" )
-    return opti_bw    
+    return [opti_bw, max_R_squared]  
 
 
 
 def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper, bw_jump):
     opti_bandwidths = []
+    opti_R_squared = []
     iteration = 0
     start = time.time()
-    tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000_modified.tif")
+    tiff_file = gdal.Open("D:/population/countries_2000/population_europe_2000_modified.tif")
     arr_img = tiff_file.ReadAsArray()
     arr_img = arr_img.astype(np.int)
     ravel_arr_img = np.ravel(arr_img)
@@ -130,23 +131,25 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
     for i in range(0,nb_iterations+1,1):
         if i <= nb_iterations:
             mat = np.random.choice(ravel_arr_img, (x_size, y_size))
-            opti_bandwidths.append(Find_opti_bandwidth(input_mat = mat, bw_lower =bw_lower, bw_upper=bw_upper, bw_jump=bw_jump))
+            opti_outputs = Find_opti_bandwidth(input_mat = mat, bw_lower =bw_lower, bw_upper=bw_upper, bw_jump=bw_jump)
+            opti_bandwidths.append(opti_outputs[0])
+            opti_R_squared.append(opti_outputs[1])
             print("I finish iteration number "+str(i+1))
         else:
             end = time.time()            
             duration = end - start
             print("I made this one in "+str(duration)+" seconds")
     
-    return opti_bandwidths
+    return [opti_bandwidths, opti_R_squared]
 
-
-list_opti_bandwidths = random_mat_opti_bandwidths(nb_iterations=500, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5, bw_jump = 0.1)    
-print(list_opti_bandwidths)
-print("Average :"+str(mean(list_opti_bandwidths)))
-print("Median :"+str(statistics.median(list_opti_bandwidths)))
-print("Minimum :"+str(min(list_opti_bandwidths)))
-print("Maximum :"+str(max(list_opti_bandwidths)))
-print("Standard Deviations :"+str(statistics.stdev(list_opti_bandwidths)))
+outputs = random_mat_opti_bandwidths(nb_iterations=4000, x_size = 10, y_size = 10, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
+list_opti_bandwidths = outputs[0]
+list_opti_R_squared = outputs[1]    
+print("Average :"+str(mean(list_opti_bandwidths))+" R squared "+str((mean(list_opti_R_squared))))
+print("Median :"+str(statistics.median(list_opti_bandwidths))+" R squared "+str(statistics.median(list_opti_R_squared)))
+print("Minimum :"+str(min(list_opti_bandwidths))+" R squared "+str(min(list_opti_R_squared)))
+print("Maximum :"+str(max(list_opti_bandwidths))+" R squared "+str(max(list_opti_R_squared)))
+print("Standard Deviations :"+str(statistics.stdev(list_opti_bandwidths))+" R squared "+str(statistics.stdev(list_opti_R_squared)))
     
 
 """
@@ -160,7 +163,7 @@ print(Find_opti_bandwidth(input_mat=mat, bw_lower=1.1, bw_upper=2, bw_jump=0.01)
 
 """
 #1. OPEN THE TIFF FILE
-tiff_file = gdal.Open("D:/population/countries_2000/population_europe_2000_modified.tif")
+tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000_modified.tif")
 
 #2. GET INFORMATION FROM THE TIFF FILE
 
@@ -181,7 +184,7 @@ band = None #close it
 ##4.OPERATION ON THE ARRAY##
 ############################
 
-final_arr = smooth_matrix(arr_img, 11)
+final_arr = smooth_matrix(arr_img, 1.7)
 print(final_arr)
 
 
@@ -213,7 +216,7 @@ plt.close()
 #5.CREATE THE NEW TIFF FILE AND EXPORT IT
 
 driver = gdal.GetDriverByName('GTiff')
-new_tiff = driver.Create("D:/test/smooth_population_bw11.tif" ,xsize,ysize,1,gdal.GDT_Int16)
+new_tiff = driver.Create("D:/test/smooth_night_light_bw1_7.tif" ,xsize,ysize,1,gdal.GDT_Int16)
 new_tiff.SetGeoTransform(geotransform)
 new_tiff.SetProjection(projection)
 new_tiff.GetRasterBand(1).WriteArray(final_arr)
