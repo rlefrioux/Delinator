@@ -1,0 +1,27 @@
+#######
+#BUILT#
+#######
+
+################## [1,5] ########## 
+n=500
+###################################
+I finish the whole process in 75.87890076637268
+Which make an average iterations time of 0.15175780153274537
+Average :2.146400000000001 R squared 0.07752338603720625
+Median :1.4000000000000004 R squared 0.04517920614493761
+Minimum :1.1 R squared 0.0003524376789229649
+Maximum :5.0000000000000036 R squared 0.6124881154078619
+Standard Deviations :1.3530367537187713 R squared 0.089748277063226
+##################################
+n=1000
+###################################
+I finish the whole process in 156.87807154655457
+Which make an average iterations time of 0.15687807154655456
+Average :2.2342000000000013 R squared 0.06864004170594946
+Median :1.4000000000000004 R squared 0.03855020912973256
+Minimum :1.1 R squared 0.0
+Maximum :5.0000000000000036 R squared 0.4679952778241401
+Standard Deviations :1.3725065151517997 R squared 0.08345776687488408
+##################################
+n=2000
+###################################

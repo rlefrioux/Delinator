@@ -14,7 +14,6 @@ from statistics import mean
 import time
 
 
-
 def euclidean_dist(x_1 , y_1, x_2, y_2):
     value = math.sqrt(((x_1-x_2)**2)+((y_1-y_2)**2))
     return value
@@ -95,13 +94,11 @@ def avg_R_squared(input_mat, kernel_matrix, x_size, y_size):
                 weight_list = np.append(weight_list, input_mat[x,y])
     weight_sum = weight_list.sum()
     weight_list = weight_list / weight_sum
-    R_squared_list = R_squared_list * weight_list
-    avg_R_squared = R_squared_list.mean()
+    avg_R_squared = np.average(R_squared_list, weights=weight_list)
     return avg_R_squared
 
 
 def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
-    start = time.time()
     x_size = len(input_mat)
     y_size = len(input_mat[0])
     bandwidth = []
@@ -113,9 +110,6 @@ def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
     max_index = R_squared_list.argmax()
     max_R_squared = R_squared_list[max_index]
     opti_bw = bandwidth[max_index]
-    end = time.time()
-    duration = end-start
-    print("I find the optimal bandwidth in "+str(duration)+" seconds" )
     return [opti_bw, max_R_squared]
 
 
@@ -123,9 +117,14 @@ def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
 def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper, bw_jump):
     opti_bandwidths = []
     opti_R_squared = []
+    mediane_bw = []
+    mediane_R2 = []
+    mean_bw = []
+    mean_R2 = []
+    total_duration = 0
     iteration = 0
     start = time.time()
-    tiff_file = gdal.Open("D:/population/countries_2000/population_europe_2000_modified.tif")
+    tiff_file = gdal.Open("D:/built/countries_2000/built_europe_2000_modified.tif")
     arr_img = tiff_file.ReadAsArray()
     arr_img = arr_img.astype(np.int)
     ravel_arr_img = np.ravel(arr_img)
@@ -133,27 +132,44 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
     arr_img = None
     img = None
     for i in range(1,nb_iterations+1,1): # [GLF] Fix iteration number
+        if i % 10 == 0:
+            print(f"Iteration {i} / {nb_iterations}")
         mat = np.random.choice(ravel_arr_img, (x_size, y_size))
         opti_outputs = Find_opti_bandwidth(input_mat = mat, bw_lower =bw_lower, bw_upper=bw_upper, bw_jump=bw_jump)
         opti_bandwidths.append(opti_outputs[0])
         opti_R_squared.append(opti_outputs[1])
-        print("I finish iteration number "+str(i)) # [GLF] Fix iteration number logging
+        mediane_bw.append(statistics.median(opti_bandwidths))
+        mediane_R2.append(statistics.median(opti_R_squared))
+        mean_bw.append(mean(opti_bandwidths))
+        mean_R2.append(mean(opti_R_squared))
     # [GLF] Fix last iteration action
     end = time.time()
     duration = end - start
-    print("I made this one in "+str(duration)+" seconds")
-    return [opti_bandwidths, opti_R_squared]
-
-outputs = random_mat_opti_bandwidths(nb_iterations=4000, x_size = 10, y_size = 10, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
-list_opti_bandwidths = outputs[0]
-list_opti_R_squared = outputs[1]
-print("Average :"+str(mean(list_opti_bandwidths))+" R squared "+str((mean(list_opti_R_squared))))
-print("Median :"+str(statistics.median(list_opti_bandwidths))+" R squared "+str(statistics.median(list_opti_R_squared)))
-print("Minimum :"+str(min(list_opti_bandwidths))+" R squared "+str(min(list_opti_R_squared)))
-print("Maximum :"+str(max(list_opti_bandwidths))+" R squared "+str(max(list_opti_R_squared)))
-print("Standard Deviations :"+str(statistics.stdev(list_opti_bandwidths))+" R squared "+str(statistics.stdev(list_opti_R_squared)))
+    total_duration += duration
+    print("I finish the whole process in "+str(duration))
+    print("Which make an average iterations time of "+str(duration/nb_iterations))
+    return [opti_bandwidths, opti_R_squared, mediane_bw, mediane_R2, mean_bw, mean_R2]
 
 
+
+def main():
+    opti_bandwidths, opti_R_squared, mediane_bw, mediane_R2, mean_bw, mean_R2 = random_mat_opti_bandwidths(nb_iterations=10000, x_size = 10, y_size = 10, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
+    plt.plot(mediane_bw)
+    plt.savefig("D:/test/mediane_bw_built")
+    plt.close()
+    plt.plot(mediane_R2)
+    plt.savefig("D:/test/mediane_R2_built")
+    plt.close()
+    plt.plot(mean_bw)
+    plt.savefig("D:/test/mean_bw_built")
+    plt.close()
+    plt.plot(mean_R2)
+    plt.savefig("D:/test/mean_R2_built")
+    plt.close()
+
+if __name__ == "__main__":
+    main()
+    
 """
 mat = np.ones((100,100))
 for x in range(0,100,1):
