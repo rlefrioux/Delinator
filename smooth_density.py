@@ -11,8 +11,9 @@ import pandas as pd
 import seaborn as sns
 import random
 from statistics import mean
+import csv
 import time
-
+import json
 
 def euclidean_dist(x_1 , y_1, x_2, y_2):
     value = math.sqrt(((x_1-x_2)**2)+((y_1-y_2)**2))
@@ -117,10 +118,6 @@ def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
 def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper, bw_jump):
     opti_bandwidths = []
     opti_R_squared = []
-    mediane_bw = []
-    mediane_R2 = []
-    mean_bw = []
-    mean_R2 = []
     total_duration = 0
     iteration = 0
     start = time.time()
@@ -138,38 +135,47 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
         opti_outputs = Find_opti_bandwidth(input_mat = mat, bw_lower =bw_lower, bw_upper=bw_upper, bw_jump=bw_jump)
         opti_bandwidths.append(opti_outputs[0])
         opti_R_squared.append(opti_outputs[1])
-        mediane_bw.append(statistics.median(opti_bandwidths))
-        mediane_R2.append(statistics.median(opti_R_squared))
-        mean_bw.append(mean(opti_bandwidths))
-        mean_R2.append(mean(opti_R_squared))
     # [GLF] Fix last iteration action
     end = time.time()
     duration = end - start
     total_duration += duration
     print("I finish the whole process in "+str(duration))
     print("Which make an average iterations time of "+str(duration/nb_iterations))
-    return [opti_bandwidths, opti_R_squared, mediane_bw, mediane_R2, mean_bw, mean_R2]
+    return [opti_bandwidths, opti_R_squared]
 
 
-
+"""
 def main():
-    opti_bandwidths, opti_R_squared, mediane_bw, mediane_R2, mean_bw, mean_R2 = random_mat_opti_bandwidths(nb_iterations=10000, x_size = 10, y_size = 10, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
-    plt.plot(mediane_bw)
-    plt.savefig("D:/test/mediane_bw_built")
-    plt.close()
-    plt.plot(mediane_R2)
-    plt.savefig("D:/test/mediane_R2_built")
-    plt.close()
-    plt.plot(mean_bw)
-    plt.savefig("D:/test/mean_bw_built")
-    plt.close()
-    plt.plot(mean_R2)
-    plt.savefig("D:/test/mean_R2_built")
-    plt.close()
-
+    opti_bandwidths, opti_R_squared = random_mat_opti_bandwidths(nb_iterations=500, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
+    df = pd.DataFrame({"bandwidth": opti_bandwidths, "r2": opti_R_squared})
+    df.to_csv("D:/test/built_500_1_5_100x100_result_serie.csv")
+    
 if __name__ == "__main__":
     main()
+"""
+
+"""
+def converge_graph():
+    bandwidths = []
+    csvfile = open("D:/test/night_light_500_1_5_100x100_result_serie.csv")
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+       bandwidth = row["bandwith"]
+       bandwidths.append(float(bandwidth))
     
+    stack_list_bw = []
+    med_bw = []
+    for x in range(0,500,1):
+        stack_list_bw.append(bandwidths[x])
+        med_bw.append(statistics.median(stack_list_bw))
+    
+    plt.plot(med_bw)
+    plt.savefig("D:/test/mediane_night_light_1_5_100x100")
+
+if __name__ == "__main__":
+    converge_graph()
+
+"""    
 """
 mat = np.ones((100,100))
 for x in range(0,100,1):
