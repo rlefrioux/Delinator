@@ -14,6 +14,8 @@ from statistics import mean
 import csv
 import time
 import json
+import concurrent.futures
+import os
 
 def euclidean_dist(x_1 , y_1, x_2, y_2):
     value = math.sqrt(((x_1-x_2)**2)+((y_1-y_2)**2))
@@ -115,44 +117,68 @@ def Find_opti_bandwidth(input_mat, bw_lower, bw_upper, bw_jump):
 
 
 
-def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper, bw_jump):
-    opti_bandwidths = []
-    opti_R_squared = []
+def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper, bw_jump, nb_proc=6):
     total_duration = 0
     iteration = 0
     start = time.time()
-    tiff_file = gdal.Open("D:/built/countries_2000/built_europe_2000_modified.tif")
+    bandwiths = []
+    R_squareds = []
+    tiff_file = gdal.Open("D:/population/countries_2000/population_europe_2000_modified.tif")
     arr_img = tiff_file.ReadAsArray()
     arr_img = arr_img.astype(np.int)
     ravel_arr_img = np.ravel(arr_img)
     ravel_arr_img = ravel_arr_img[ravel_arr_img != -999]
     arr_img = None
     img = None
-    for i in range(1,nb_iterations+1,1): # [GLF] Fix iteration number
-        if i % 10 == 0:
-            print(f"Iteration {i} / {nb_iterations}")
-        mat = np.random.choice(ravel_arr_img, (x_size, y_size))
-        opti_outputs = Find_opti_bandwidth(input_mat = mat, bw_lower =bw_lower, bw_upper=bw_upper, bw_jump=bw_jump)
-        opti_bandwidths.append(opti_outputs[0])
-        opti_R_squared.append(opti_outputs[1])
-    # [GLF] Fix last iteration action
+    kwargs = {
+        "bw_lower":bw_lower,
+        "bw_upper":bw_upper,
+        "bw_jump":bw_jump    
+    }
+    #Tasks Manager: redistribution of tasks
+    with concurrent.futures.ProcessPoolExecutor(max_workers=nb_proc) as executor:
+        fut = []
+        for i in range(1,nb_iterations+1,1): 
+            mat = np.random.choice(ravel_arr_img, (x_size, y_size))
+            kwargs["input_mat"] = mat
+            fut.append(executor.submit(Find_opti_bandwidth, **kwargs))
+        #Tasks Controler    
+        done = False
+        while not done:
+            for i, f in enumerate(fut):
+                f_is_done = f.done()
+                f_error = f.exception()
+                if f_error:
+                    raise f_error
+                if f_is_done:
+                    print(f"Iteration remaining {len(fut)} / {nb_iterations}")
+                    fut.pop(i)
+                    bandwidth, R_squared = f.result()
+                    bandwiths.append(bandwidth)
+                    R_squareds.append(R_squared)
+            done = len(fut) == 0
+                
     end = time.time()
     duration = end - start
     total_duration += duration
     print("I finish the whole process in "+str(duration))
     print("Which make an average iterations time of "+str(duration/nb_iterations))
-    return [opti_bandwidths, opti_R_squared]
+    return [bandwiths, R_squareds]
 
-
-"""
 def main():
-    opti_bandwidths, opti_R_squared = random_mat_opti_bandwidths(nb_iterations=500, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
-    df = pd.DataFrame({"bandwidth": opti_bandwidths, "r2": opti_R_squared})
-    df.to_csv("D:/test/built_500_1_5_100x100_result_serie.csv")
+    path = "D:/test/population_500_1_5_100x100_result_serie_.csv"
+    header = True
+    mode = "a"
+    if os.path.exists(path):
+        header = False
+        
+    bandwiths, R_squareds = random_mat_opti_bandwidths(nb_iterations=500, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
+    df = pd.DataFrame({"bandwith": bandwiths, "r2": R_squareds})
+    df.to_csv(path, mode=mode, header=header, index=False)
     
 if __name__ == "__main__":
     main()
-"""
+
 
 """
 def converge_graph():
@@ -165,7 +191,7 @@ def converge_graph():
     
     stack_list_bw = []
     med_bw = []
-    for x in range(0,500,1):
+    for x in range(0,1000,1):
         stack_list_bw.append(bandwidths[x])
         med_bw.append(statistics.median(stack_list_bw))
     
@@ -175,7 +201,7 @@ def converge_graph():
 if __name__ == "__main__":
     converge_graph()
 
-"""    
+  """ 
 """
 mat = np.ones((100,100))
 for x in range(0,100,1):
