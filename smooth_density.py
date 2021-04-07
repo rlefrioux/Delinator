@@ -4,7 +4,6 @@ from osgeo import osr
 from matplotlib import pyplot as plt
 import scipy
 from scipy import stats
-import statsmodels.api as sm
 import statistics
 import math
 import pandas as pd
@@ -123,7 +122,7 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
     start = time.time()
     bandwiths = []
     R_squareds = []
-    tiff_file = gdal.Open("D:/population/countries_2000/population_europe_2000_modified.tif")
+    tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000_modified.tif")
     arr_img = tiff_file.ReadAsArray()
     arr_img = arr_img.astype(np.int)
     ravel_arr_img = np.ravel(arr_img)
@@ -146,12 +145,13 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
         done = False
         while not done:
             for i, f in enumerate(fut):
+                
                 f_is_done = f.done()
                 f_error = f.exception()
                 if f_error:
                     raise f_error
                 if f_is_done:
-                    print(f"Iteration remaining {len(fut)} / {nb_iterations}")
+                    print(f"Iteration remaining {len(fut)-1} / {nb_iterations}")
                     fut.pop(i)
                     bandwidth, R_squared = f.result()
                     bandwiths.append(bandwidth)
@@ -165,21 +165,21 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
     print("Which make an average iterations time of "+str(duration/nb_iterations))
     return [bandwiths, R_squareds]
 
+"""
 def main():
-    path = "D:/test/population_500_1_5_100x100_result_serie_.csv"
+    path = "D:/test/night_light_500_1_5_100x100_result_serie_.csv"
     header = True
     mode = "a"
     if os.path.exists(path):
         header = False
         
-    bandwiths, R_squareds = random_mat_opti_bandwidths(nb_iterations=500, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
+    bandwiths, R_squareds = random_mat_opti_bandwidths(nb_iterations=200, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
     df = pd.DataFrame({"bandwith": bandwiths, "r2": R_squareds})
     df.to_csv(path, mode=mode, header=header, index=False)
     
 if __name__ == "__main__":
     main()
-
-
+"""
 """
 def converge_graph():
     bandwidths = []
@@ -191,24 +191,20 @@ def converge_graph():
     
     stack_list_bw = []
     med_bw = []
-    for x in range(0,1000,1):
+    for x in range(0,1200,1):
         stack_list_bw.append(bandwidths[x])
         med_bw.append(statistics.median(stack_list_bw))
     
-    plt.plot(med_bw)
-    plt.savefig("D:/test/mediane_night_light_1_5_100x100")
+    plt.plot(med_bw, color="black")
+    plt.hlines(1.8, 0, 1200, colors="red")
+    plt.title("Convergence of the optimal bandwidth for Night Light")
+    plt.xlabel("Number of iterations", fontsize = "12")
+    plt.ylabel("Optimal bandwidth", fontsize = "12")
+    plt.savefig("D:/test/mediane_opti_bw_night_light")
 
 if __name__ == "__main__":
     converge_graph()
 
-  """ 
-"""
-mat = np.ones((100,100))
-for x in range(0,100,1):
-    for y in range(0,100,1):
-        mat[x,y] = random.randint(0, 64)
-
-print(Find_opti_bandwidth(input_mat=mat, bw_lower=1.1, bw_upper=2, bw_jump=0.01))
 """
 
 """
@@ -234,10 +230,9 @@ band = None #close it
 ##4.OPERATION ON THE ARRAY##
 ############################
 
-final_arr = smooth_matrix(arr_img, 1.7)
-print(final_arr)
-
-
+final_arr = smooth_matrix(arr_img, 1.8)
+"""
+"""
 histo_list = np.ravel(arr_img)
 histo_list = histo_list[histo_list != -999]
 
@@ -262,11 +257,12 @@ plt.close()
 sns.displot(x=histo_list, kind="ecdf")
 plt.savefig("D:/test/none_smooth_population_CDFs")
 plt.close()
-
+"""
+"""
 #5.CREATE THE NEW TIFF FILE AND EXPORT IT
 
 driver = gdal.GetDriverByName('GTiff')
-new_tiff = driver.Create("D:/test/smooth_night_light_bw1_7.tif" ,xsize,ysize,1,gdal.GDT_Int16)
+new_tiff = driver.Create("D:/test/smooth_night_light_opti_bw.tif" ,xsize,ysize,1,gdal.GDT_Int16)
 new_tiff.SetGeoTransform(geotransform)
 new_tiff.SetProjection(projection)
 new_tiff.GetRasterBand(1).WriteArray(final_arr)
