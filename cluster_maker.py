@@ -29,5 +29,5 @@ def get_all_urban_cluster(array):
             for idx in cluster:
                 classified_idx.add(idx)
             clusters.append(cluster)
-    
     return clusters
+

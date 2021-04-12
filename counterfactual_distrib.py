@@ -3,6 +3,8 @@ from osgeo import gdal
 from osgeo import osr
 import matplotlib.pyplot as plt
 import sys
+import json
+import pandas as pd
 import scipy
 import time
 import seaborn as sns
@@ -12,8 +14,9 @@ import concurrent.futures
 
 
 
+"""
 #1. OPEN THE TIFF FILE
-tiff_file = gdal.Open("D:/built/countries_2000/built_europe_2000.tif")
+tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000.tif")
 
 #2. GET INFORMATION FROM THE TIFF FILE
 
@@ -44,7 +47,7 @@ mask_arr = mask_img.ReadAsArray()
 mask_arr = mask_arr.astype(np.bool_)
 mask_img = None
 value_dict= {}
-
+"""
  
 def counterfactual_distrib(mask_arr = mask_arr, ravel_arr_img=ravel_arr_img, kernel_matrix=kernel_matrix, ysize=ysize, xsize=xsize):
     start = time.time()
@@ -84,9 +87,9 @@ def main():
                     values, values_count = f.result()
                     for v, count in zip(values, values_count):
                         if v in value_dict.keys():
-                            value_dict[v] += count
+                            value_dict[int(v)] += int(count)
                         else:
-                            value_dict[v] = count
+                            value_dict[int(v)] = int(count)
             done = len(fut) == 0
     end = time.time()
     duration = end - start
@@ -96,24 +99,34 @@ def main():
 
 if __name__ == "__main__":
     value_dict = main()
-    total_count = 0
+    with open("D:/test/night_light_counterfactual_dict.json", mode="w") as f:
+        f.write(json.dumps(value_dict, indent=4))
+    
+
+
+
+# Reading
+with open("D:/test/counterfactuals_outputs/built_counterfactual_dict.json") as f:
+    content = f.read()
+    value_dict = json.loads(content)
     num_count = 0
-    for key in value_dict:
-        total_count += value_dict[key]
-    for key in value_dict:
-        if num_count/total_count*100 <= 95:
-            num_count += value_dict[key]
+    keys = []
+    values = []
+    for k, v in value_dict.items():
+        keys.append(int(k))
+        values.append(v)
+    
+    df = pd.DataFrame({"keys": keys, "values": values})
+    df = df.sort_values("keys")    
+    total_count = df["values"].sum()
+    
+    for _, row in df.iterrows():
+        key = row["keys"]
+        value = row["values"]  
+        if (num_count/total_count)*100 <= 99:
+            num_count += value
         else:
             print(key)
             break
-
-# Ecriture
-import json
-with open("D:/test/built_counterfactual_dict.json"):
-    f.write(json.dumps(value_dict, indent=4))
-
-
-# Lecture
-with open("D:/test/built_counterfactual_dict.json"):
-    content = f.read()
-    value_dict = json.loads(content)
+    
+    

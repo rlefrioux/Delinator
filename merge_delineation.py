@@ -49,6 +49,6 @@ def merge_3_output(tiff_1, tiff_2, tiff_3, output_tiff):
     new_tiff = None #closes the file
     
     
-merge_3_output(tiff_1 = "D:/test/population_bw3_p99.tif", tiff_2 = "D:/test/night_light_bw3_p99.tif", tiff_3 = "D:/test/built_bw3_p99.tif", output_tiff="D:/test/bw3_p99_merge.tif") 
+merge_3_output(tiff_1 = "D:/test/population_delineation_p97.tif", tiff_2 = "D:/test/night_light_delineation_p99.tif", tiff_3 = "D:/test/built_delineation_p99.tif", output_tiff="D:/test/combined_delineation_p_opti.tif") 
 
    

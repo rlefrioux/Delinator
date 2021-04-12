@@ -4,7 +4,7 @@ from osgeo import gdal
 
 index_list = ["jaccard", ]
 types_list = ["night_light", "built", "population"]
-opti_perc_list = [93, 95, 96]
+opti_perc_list = [95, 95, 96]
 
 #COMBINE OPTIMAL MAPS USING PIXELS THAT ARE URBAN ON ALL MAPS
 
