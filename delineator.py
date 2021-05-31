@@ -23,11 +23,6 @@ def counterfactual_distrib(final_arr, kernel_matrix, ravel_arr, ysize, xsize):
     ravel_mat = ravel_mat[ravel_mat != -999]
     return np.unique(ravel_mat, return_counts = True)
 
-
-
-
-
-
 def delineator(input_tiff, output_tiff, perc):
     #1. OPEN THE TIFF FILE
     tiff_file = gdal.Open(input_tiff)
@@ -57,7 +52,7 @@ def delineator(input_tiff, output_tiff, perc):
     start = time.time()
 
     final_arr = np.where(arr_img==-999, 0, arr_img)
-    final_arr = sd.smooth_matrix(input_mat=final_arr, bandwidth=2.3)
+    final_arr = sd.smooth_matrix(input_mat=final_arr, bandwidth=2.2)
       
     
     final_arr = np.where(final_arr < perc, -2, final_arr)
@@ -94,7 +89,13 @@ def delineator(input_tiff, output_tiff, perc):
         #SECOND DELINEATION
     start = time.time()
     
-    kernel_matrix = sd.bisquare_kernel_matrix(bandwidth=2.3)
+     #####
+    #tiff_file = gdal.Open("D:/built/countries_2000/built_europe_2000_modified.tif")
+    #arr_img = tiff_file.ReadAsArray()
+    #arr_img = arr_img.astype(np.int)
+     ####
+    
+    kernel_matrix = sd.bisquare_kernel_matrix(bandwidth=2.2)
     array = np.where(final_arr == 0, arr_img, -1)
     ravel_arr = np.ravel(array)
     ravel_arr = ravel_arr[ravel_arr != -1]
@@ -107,7 +108,7 @@ def delineator(input_tiff, output_tiff, perc):
               "xsize" : xsize}
     
     start = time.time()
-    nb_iterations = 100
+    nb_iterations = 200
     
     with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
         fut = []
@@ -151,7 +152,7 @@ def delineator(input_tiff, output_tiff, perc):
     for _, row in df.iterrows():
         key = row["keys"]
         value = row["values"]  
-        if (num_count/total_count)*100 <= 95:
+        if (num_count/total_count)*100 <= 99:
             num_count += value
         else:
             perc = key
@@ -242,4 +243,4 @@ def delineator(input_tiff, output_tiff, perc):
     new_tiff = None #closes the file
 
 if __name__ == "__main__":
-    delineator("D:/population/countries_2000/population_europe_2000_modified.tif", "D:/test/population_delineation_p99_p95.tif", perc=481)
+    delineator("D:/population/countries_2019/population_europe_2019_modified.tif", "D:/test/europe_2019/population_europe_2019_p99_p99.tif", perc=419)

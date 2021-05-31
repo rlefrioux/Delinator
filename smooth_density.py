@@ -16,6 +16,7 @@ import json
 import concurrent.futures
 import os
 
+
 def euclidean_dist(x_1 , y_1, x_2, y_2):
     value = math.sqrt(((x_1-x_2)**2)+((y_1-y_2)**2))
     return value
@@ -122,7 +123,7 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
     start = time.time()
     bandwiths = []
     R_squareds = []
-    tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000_modified.tif")
+    tiff_file = gdal.Open("D:/population/countries_2019/population_europe_2019_modified.tif")
     arr_img = tiff_file.ReadAsArray()
     arr_img = arr_img.astype(np.int)
     ravel_arr_img = np.ravel(arr_img)
@@ -167,23 +168,24 @@ def random_mat_opti_bandwidths(nb_iterations, x_size, y_size, bw_lower, bw_upper
 
 """
 def main():
-    path = "D:/test/night_light_500_1_5_100x100_result_serie_.csv"
+    path = "D:/test/europe_2019/optimal_bandwidth_series_europe_population_2019.csv"
     header = True
     mode = "a"
     if os.path.exists(path):
         header = False
         
-    bandwiths, R_squareds = random_mat_opti_bandwidths(nb_iterations=200, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
+    bandwiths, R_squareds = random_mat_opti_bandwidths(nb_iterations=2000, x_size = 100, y_size = 100, bw_lower = 1.1, bw_upper = 5.1, bw_jump = 0.1)
     df = pd.DataFrame({"bandwith": bandwiths, "r2": R_squareds})
     df.to_csv(path, mode=mode, header=header, index=False)
     
 if __name__ == "__main__":
     main()
 """
-"""
+
+
 def converge_graph():
     bandwidths = []
-    csvfile = open("D:/test/night_light_500_1_5_100x100_result_serie.csv")
+    csvfile = open("D:/test/europe_2019/optimal_bandwidth_series_europe_population_2019.csv")
     reader = csv.DictReader(csvfile)
     for row in reader:
        bandwidth = row["bandwith"]
@@ -191,21 +193,21 @@ def converge_graph():
     
     stack_list_bw = []
     med_bw = []
-    for x in range(0,1200,1):
+    for x in range(0,2000,1):
         stack_list_bw.append(bandwidths[x])
         med_bw.append(statistics.median(stack_list_bw))
     
-    plt.plot(med_bw, color="black")
-    plt.hlines(1.8, 0, 1200, colors="red")
-    plt.title("Convergence of the optimal bandwidth for Night Light")
+    plt.hlines(2.2, 0, 2000, colors="red")
+    plt.plot(med_bw, color="grey", alpha=0.5)
     plt.xlabel("Number of iterations", fontsize = "12")
-    plt.ylabel("Optimal bandwidth", fontsize = "12")
-    plt.savefig("D:/test/mediane_opti_bw_night_light")
+    plt.ylabel("Median of the optimal bandwidth", fontsize = "12")
+    plt.yticks(ticks=[1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4])
+    plt.savefig("D:/test/europe_2019/mediane_opti_bw_europe_population_2019")
 
 if __name__ == "__main__":
     converge_graph()
 
-"""
+
 
 """
 #1. OPEN THE TIFF FILE

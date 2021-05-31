@@ -18,7 +18,7 @@ ctr_code = "europe"
 ctr_name = "Europe"
 index_dict = {"jaccard" : "Jaccard Index", "MSE" : "Mean Squared Errors", "SSIM" : "Structural Similarity"}
 
-
+"""
 #Compare the different types of data 
 for i in range(0, len(types_list), 1):
     for j in range(i+1, len(types_list), 1):
@@ -29,22 +29,27 @@ for i in range(0, len(types_list), 1):
                 for jj in range(95, 100, 1):
                     input_tiff_1 = "D:/test/"+str(types_list[i])+"_delineation_p"+str(ii)+".tif"
                     input_tiff_2 = "D:/test/"+str(types_list[j])+"_delineation_p"+str(jj)+".tif"
-                    writer.writerow([str(ii), str(types_list[i]), str(jj), str(types_list[j]), comparaison.jaccard_index(input_tiff_1, input_tiff_2)])
-
-"""                 
-#Compare the different percentile thresholds   
-for ii in index_list:    
-    for t in types_list:
-        with open("D:/test/"+ctr_code+"_comparaison_"+t+".csv", 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Percentile 1st Map","Type of the 1st Map", "Percentile 2nd Map","Type of the 2nd Map", "Jaccard Index", "Mean Squared Errors", "Structural Similarity"])    
-            for i in range(89, 99, 1):
-                input_tiff_1 = "D:/test/p"+str(i)+"_"+t+"_"+ctr_code+"_2000.tif"
-                input_tiff_2 = "D:/test/p"+str(i+1)+"_"+t+"_"+ctr_code+"_2000.tif"
-                writer.writerow([str(i), t, str(i+1), t, comparaison.jaccard_index(input_tiff_1, input_tiff_2)])
+                    writer.writerow([str(ii), str(types_list[i]), str(jj), str(types_list[j]),
+                                     comparaison.jaccard_index(input_tiff_1, input_tiff_2)])
 """
 
+#Compare the different percentile thresholds   
+with open("D:/test/comparaison_population_delineations.csv", 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["1st map", "", "", "", "results"])
+    writer.writerow(["Percentile 1st delineation", "Type of the 1st delineation", "Percentile 2nd delineation",
+                     "Type of the 2nd delineation", "Jaccard Index"])    
+    for i in [99,]:
+        for j in [99, 98, 97]:
+            input_tiff_1 = "D:/test/population_delineation_p"+str(i)+"_built_p"+str(j)+".tif"
+            input_tiff_2 = "D:/FUAs_EU/europe_urban_centers.tif"
+            writer.writerow([str(i), "population" , str(j), "built",
+                                 round(comparaison.jaccard_index(input_tiff_1, input_tiff_2), 3)])
 
+
+
+
+"""
 #To create a machin that store couples of percentiles that max indexes
 
 for k in index_list:
@@ -119,7 +124,7 @@ for k in index_list:
             
            
 
-"""
+
 #Create a graphic using the different indexes based on the comparaison of the percentile
 for i in index_list:
     for t in types_list:
@@ -134,10 +139,10 @@ for i in index_list:
     plt.savefig("D:/test/"+ctr_code+"_"+i+".png")
     plt.show()
     plt.close()
-"""
 
 
-"""
+
+
 #Create a graphic using the different indexes based on the comparaison of the type of data
 for ii in index_list:
     for i in range(0, len(types_list), 1):

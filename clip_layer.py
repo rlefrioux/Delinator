@@ -1,11 +1,19 @@
 import csv
 import subprocess
 
-continents = ["SWZ", ]
+type_list = ["night_light", "built", "population"]
 
-for y in [2000,]:
-    for c in continents:
-        command = "gdalwarp -t_srs EPSG:4326 -te_srs EPSG:4326 -tr 0.008333333300000000596 0.008333333300000000596 -of GTiff -overwrite -cutline D:/country_boundaries/gadm36_"+c+"_0.shp -cl "+c+" -crop_to_cutline -dstnodata -999.0 D:/built/built_europe_"+str(y)+"_modified.tif D:/built/countries_"+str(y)+"/built_"+c+"_"+str(y)+".tif"
-        proc = subprocess.Popen(command, shell=True)
-        print("J'en ai fini avec "+ str(y) + c)
+years = {"night_light" : [i for i in range(1993, 2014)],
+        "built" : [2000, 2015],
+        "population" : [i for i in range(2000, 2020)]
+        }
+
+continents = ["asia", "north_america", "south_america", "europe", "oceania"]
+
+for t in type_list:
+    for y in years[t]:
+        for c in continents:
+            command = "gdalwarp -s_srs EPSG:4326 -t_srs EPSG:4326 -of GTiff -cutline D:/country_boundaries/"+c+".shp -cl "+c+" -crop_to_cutline -dstnodata -999.0 D:/"+t+"/"+t+"_"+str(y)+".tif D:/inputs/"+t+"/"+str(y)+"/"+t+"_"+str(y)+"_"+c+".tif"
+            proc = subprocess.Popen(command, shell=True)
+            proc.wait()
 

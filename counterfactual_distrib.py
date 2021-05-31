@@ -14,17 +14,14 @@ import concurrent.futures
 
 
 
-"""
 #1. OPEN THE TIFF FILE
-tiff_file = gdal.Open("D:/night_light/countries_2000/night_light_europe_2000.tif")
+tiff_file = gdal.Open("D:/population/countries_2019/population_europe_2019.tif")
 
 #2. GET INFORMATION FROM THE TIFF FILE
 
 geotransform = tiff_file.GetGeoTransform()
 projection = tiff_file.GetProjection()
-band = tiff_file.GetRasterBand(1)
-xsize = band.XSize
-ysize = band.YSize
+
 
 #3. LOAD THE TIFF FILE IN AN ARRAY
 
@@ -40,15 +37,19 @@ band = None #close it
 ravel_arr_img = np.ravel(arr_img)
 ravel_arr_img = ravel_arr_img[ravel_arr_img != -999]
 img = None
-kernel_matrix = sd.bisquare_kernel_matrix(bandwidth=1.8)
+kernel_matrix = sd.bisquare_kernel_matrix(bandwidth=2.2)
 counter_distrib = np.empty((0), dtype = int)
 mask_img = gdal.Open("D:/none_urban/countries/none_urban_europe.tif")
+band = mask_img.GetRasterBand(1)
+xsize = band.XSize
+ysize = band.YSize
 mask_arr = mask_img.ReadAsArray()
 mask_arr = mask_arr.astype(np.bool_)
+#mask_arr = np.delete(mask_arr, 1, 0)
+#mask_arr = np.delete(mask_arr, 1, 1)
 mask_img = None
 value_dict= {}
-"""
- 
+
 def counterfactual_distrib(mask_arr = mask_arr, ravel_arr_img=ravel_arr_img, kernel_matrix=kernel_matrix, ysize=ysize, xsize=xsize):
     start = time.time()
     mat = np.random.choice(ravel_arr_img, (ysize, xsize))
@@ -96,17 +97,16 @@ def main():
     print("I finish the whole process in "+str(duration))
     print("Which make an average iterations time of "+str(duration/nb_iterations))
     return value_dict
-
+"""
 if __name__ == "__main__":
     value_dict = main()
-    with open("D:/test/night_light_counterfactual_dict.json", mode="w") as f:
+    with open("D:/test/europe_2019/population_2019_counterfactual_dict.json", mode="w") as f:
         f.write(json.dumps(value_dict, indent=4))
-    
-
+"""  
 
 
 # Reading
-with open("D:/test/counterfactuals_outputs/built_counterfactual_dict.json") as f:
+with open("D:/test/europe_2019/population_2019_counterfactual_dict.json") as f:
     content = f.read()
     value_dict = json.loads(content)
     num_count = 0
@@ -123,10 +123,9 @@ with open("D:/test/counterfactuals_outputs/built_counterfactual_dict.json") as f
     for _, row in df.iterrows():
         key = row["keys"]
         value = row["values"]  
-        if (num_count/total_count)*100 <= 99:
+        if (num_count/total_count)*100 <= 95:
             num_count += value
         else:
             print(key)
             break
-    
     

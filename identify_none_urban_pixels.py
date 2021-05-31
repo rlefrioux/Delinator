@@ -135,6 +135,11 @@ def mask_none_urban(none_urban_mask, tiff_to_mask, output_tiff):
     
     #OPERATION ON ARRAYS
     
+    #This to reshape the mask in order to fit it with the map
+    
+    arr_mask = np.delete(arr_mask, 0, axis = 0)
+    arr_mask = np.delete(arr_mask, 0, axis = 1)
+
     #exclude pixels that can't be urban using a mask
     
     final_arr = np.where(arr_mask == 1, 0, arr_img)
@@ -152,12 +157,10 @@ def mask_none_urban(none_urban_mask, tiff_to_mask, output_tiff):
   
   
 
-types_list = ["population",]
-
-for t in types_list:
-    tiff_to_modify = "D:/"+t+"/countries_2000/"+t+"_europe_2000.tif"
-    output_tiff = "D:/"+t+"/countries_2000/"+t+"_europe_2000_modified.tif"
-    mask_none_urban(none_urban_mask, tiff_to_modify, output_tiff)
+none_urban_mask = "D:/none_urban/countries/none_urban_europe.tif"
+tiff_to_modify = "D:/population/countries_2019/population_europe_2019.tif"
+output_tiff = "D:/population/countries_2019/population_europe_2019_modified.tif"
+mask_none_urban(none_urban_mask, tiff_to_modify, output_tiff)
 
 
 
